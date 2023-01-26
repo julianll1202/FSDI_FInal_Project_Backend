@@ -2,8 +2,10 @@ from app import app, db
 from flask import Flask, abort, request
 from app.models import User
 import json
+from flask import jsonify
 from flask_cors import CORS
-
+from app.api.auth import basic_auth
+from werkzeug.security import generate_password_hash, check_password_hash
 CORS(app)
 
 @app.route('/')
@@ -24,22 +26,20 @@ def save_user():
             return abort(208, "Email already on database")
     if user is None:
         return abort(400, "User could not be created")
+    psswd = generate_password_hash(user['password'])
     u = User(first_name=str(user['first-name']), last_name=str(user['last-name']),
-        email=str(user['email']), password=str(user['password']))
+        email=str(user['email']), password=psswd)
     db.session.add(u)
     db.session.commit()
     return json.dumps(user)
 
 @app.post("/login")
-def validate_user_cred():
-    user_cred = request.get_json()
-    users = get_all_users()
-    for usr in users:
-        if user_cred['email'] == usr['email']:
-            if user_cred['password'] == usr['password']:
-                return json.dumps(usr)
-            else:
-                return abort(400, "Invalid user credentials")
+@basic_auth.login_required
+def get_token():
+    token = basic_auth.current_user().get_token()
+    db.session.commit()
+    return jsonify({'token': token})
+
 
 # Gets the list of all the users
 @app.get("/user-list")
