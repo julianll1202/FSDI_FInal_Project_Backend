@@ -7,6 +7,8 @@ from flask_cors import CORS
 from app.api.auth import basic_auth
 from werkzeug.security import generate_password_hash, check_password_hash
 CORS(app)
+from sqlalchemy import select
+from sqlalchemy.orm import sessionmaker
 
 @app.route('/')
 @app.route('/index')
@@ -33,6 +35,7 @@ def save_user():
     db.session.commit()
     return json.dumps(user)
 
+# Logs in the user
 @app.post("/login")
 @basic_auth.login_required
 def get_token():
@@ -40,6 +43,35 @@ def get_token():
     db.session.commit()
     return jsonify({'token': token})
 
+@app.get("/user-profile/<string:t>")
+def get_user(t):
+    u = db.session.query(User).filter_by(token=t).first()
+    
+    out = {
+        "id": u.id,
+        "name": u.first_name,
+        "last_name": u.last_name,
+        "email": u.email,
+        "phone": u.phone,
+        "password": u.password,
+        "country": u.country,
+        "token": u.token
+    }
+    return json.dumps(out)
+
+@app.post("/user-profile")
+def edit_user():
+    user = request.get_json()
+    u = User.query.get(str(user['id']))
+    
+    u.first_name = str(user['name'])
+    u.last_name = str(user['last_name'])
+    u.email = str(user['email'])
+    u.password = str(user['password'])
+    u.phone = str(user['phone'])
+    u.country = str(user['country'])
+    db.session.commit()
+    return json.dumps(user)
 
 # Gets the list of all the users
 @app.get("/user-list")
