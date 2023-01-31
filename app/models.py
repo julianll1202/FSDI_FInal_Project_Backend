@@ -42,3 +42,28 @@ class User(UserMixin,db.Model):
         if user is None or user.token_expiration < datetime.utcnow():
             return None
         return user
+
+class Restaurant(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    restaurant_name = db.Column(db.String(120), index=True)
+    opening_time = db.Column(db.Time)
+    closing_time = db.Column(db.Time)
+    street = db.Column(db.String(60))
+    country = db.Column(db.String(60))
+    rating = db.Column(db.Float)
+    foods = db.relationship('Food', backref='restaurant', lazy='dynamic')
+
+class Food(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    food_name = db.Column(db.String(120), index=True)
+    description = db.Column(db.Text)
+    image = db.Column(db.String(120))
+    price = db.Column(db.Float)
+    restaurant_id = db.Column(db.Integer, db.ForeignKey('restaurant.id'))
+
+class Orders(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    orderDate = db.Column(db.DateTime)
+    orderTotal = db.Column(db.Float)
+    delivery_address = db.Column(db.String(120))
+    completed = db.Column(db.Boolean, default=False)
