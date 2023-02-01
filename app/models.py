@@ -67,3 +67,10 @@ class Orders(db.Model):
     orderTotal = db.Column(db.Float)
     delivery_address = db.Column(db.String(120))
     completed = db.Column(db.Boolean, default=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+class FoodOrder(db.Model):
+    food_id = db.Column(db.Integer, db.ForeignKey('food.id'), primary_key=True, name="fk_food_id")
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), primary_key=True , name="fk_order_id")
+    quantity = db.Column(db.Integer)
+    side_note = db.Column(db.Text)
