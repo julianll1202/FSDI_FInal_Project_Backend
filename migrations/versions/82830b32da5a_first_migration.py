@@ -1,8 +1,8 @@
-"""Create database
+"""First migration
 
-Revision ID: 984fa3a25c87
+Revision ID: 82830b32da5a
 Revises: 
-Create Date: 2023-01-31 19:17:38.738112
+Create Date: 2023-02-01 20:27:58.893297
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '984fa3a25c87'
+revision = '82830b32da5a'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -45,7 +45,7 @@ def upgrade():
     sa.PrimaryKeyConstraint('id')
     )
     with op.batch_alter_table('user', schema=None) as batch_op:
-        batch_op.create_index(batch_op.f('ix_user_token'), ['token'], unique=True)
+        batch_op.create_index(batch_op.f('ix_user_email'), ['email'], unique=True)
 
     op.create_table('food',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -62,22 +62,25 @@ def upgrade():
 
     op.create_table('orders',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('orderDate', sa.DateTime(), nullable=True),
-    sa.Column('orderTotal', sa.Float(), nullable=True),
+    sa.Column('order_date', sa.DateTime(), nullable=True),
+    sa.Column('order_total', sa.Float(), nullable=True),
     sa.Column('delivery_address', sa.String(length=120), nullable=True),
     sa.Column('completed', sa.Boolean(), nullable=True),
+    sa.Column('cancelled', sa.Boolean(), nullable=True),
+    sa.Column('status', sa.Text(), nullable=True),
     sa.Column('user_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], name=op.f('fk_orders_user_id')),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('food_order',
-    sa.Column('fk_food_id', sa.Integer(), nullable=False),
-    sa.Column('fk_order_id', sa.Integer(), nullable=False),
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('fk_food_id', sa.Integer(), nullable=True),
+    sa.Column('fk_order_id', sa.Integer(), nullable=True),
     sa.Column('quantity', sa.Integer(), nullable=True),
     sa.Column('side_note', sa.Text(), nullable=True),
     sa.ForeignKeyConstraint(['fk_food_id'], ['food.id'], name=op.f('fk_food_order_fk_food_id')),
     sa.ForeignKeyConstraint(['fk_order_id'], ['orders.id'], name=op.f('fk_food_order_fk_order_id')),
-    sa.PrimaryKeyConstraint('fk_food_id', 'fk_order_id')
+    sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###
 
@@ -91,7 +94,7 @@ def downgrade():
 
     op.drop_table('food')
     with op.batch_alter_table('user', schema=None) as batch_op:
-        batch_op.drop_index(batch_op.f('ix_user_token'))
+        batch_op.drop_index(batch_op.f('ix_user_email'))
 
     op.drop_table('user')
     with op.batch_alter_table('restaurant', schema=None) as batch_op:

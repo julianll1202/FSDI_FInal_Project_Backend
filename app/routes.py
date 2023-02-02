@@ -7,9 +7,9 @@ from flask_cors import CORS
 from app.api.auth import basic_auth
 from werkzeug.security import generate_password_hash, check_password_hash
 CORS(app)
-from sqlalchemy import select
+from sqlalchemy import select, desc
 from sqlalchemy.orm import sessionmaker
-from datetime import time
+from datetime import time, datetime, date
 
 @app.route('/')
 @app.route('/index')
@@ -160,3 +160,88 @@ def get_food_details(id):
     }
 
     return json.dumps(food)
+
+######################################
+#          ORDER ENDPOINTS           #
+######################################
+
+@app.get("/user/order/<int:id>")
+def get_order(id):
+    o = Orders.query.get(id)
+    # foods = db.session.query(FoodOrder).filter_by(order_id=id).all()
+    foods = db.session.query(Food).join(FoodOrder).filter(FoodOrder.order_id==id).all()
+    food_list = []
+    for food in foods:
+        f = {
+            "id": food.id,
+            "name": food.food_name,
+            "price": food.price,
+            "restaurant_id": food.restaurant_id
+        }
+        food_list.append(f)
+   
+    res = Restaurant.query.get(int(food_list[0]['restaurant_id']))
+    order = {
+        "id": o.id,
+        "order_total": o.order_total,
+        "delivery_address": o.delivery_address,
+        "order_date": str(o.order_date),
+        "status": o.status,
+        "products": food_list,
+        "restaurant_name": res.restaurant_name
+    }
+    return json.dumps(order)
+
+@app.post("/order")
+def create_order():
+    data = request.get_json()
+    today = datetime.now()
+    new_order = Orders(order_date=today, order_total=float(data['total']),
+        delivery_address=str(data['delivery_address']), 
+        status="Restaurant is receiving your order", user_id=int(data['user_id'])
+    )
+    db.session.add(new_order)
+    current_order = db.session.query(Orders).filter_by(user_id=int(data['user_id'])).first()
+    #cur_order_query = select(Orders.id).where(Orders.user_id==int(data['user_id'])).order_by(desc(Orders.id)).limit(1)
+    # current_order = db.session.execute(cur_order_query)
+    for food in data['food_list']:
+        new_food_order = FoodOrder(food_id=food['id'],order_id=current_order.id, 
+            quantity=food['quantity'], side_note=food['side_note'])
+        db.session.add(new_food_order)
+    db.session.commit()
+    return json.dumps(data)
+
+@app.get("/user/<int:id>/orders")
+def get_past_orders(id):
+    orders = db.session.query(Orders).filter(Orders.user_id==id).all()
+    past_orders = []
+    for order in orders:
+        o = get_order(order.id)
+        past_orders.append(o)
+    return past_orders
+
+@app.get("/food-orders")
+def get_food_order_list():
+    food_orders = FoodOrder.query.all()
+    data = []
+    for food_order in food_orders:
+        entry = {
+            "food_id": food_order.food_id,
+            "order_id": food_order.order_id,
+            "quantity": food_order.quantity,
+            "side_note": food_order.side_note
+        }
+        data.append(entry)
+    return data
+
+@app.get("/food-order/<int:id>")
+def get_food_order(id):
+    food_order = FoodOrder.query.get(id)
+    out = {
+        "id": food_order.id,
+        "food_id": food_order.food_id,
+        "order_id": food_order.order_id,
+        "quantity": food_order.quantity,
+        "side_note": food_order.side_note
+    }
+    return json.dumps(out)

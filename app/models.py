@@ -60,17 +60,22 @@ class Food(db.Model):
     image = db.Column(db.String(120))
     price = db.Column(db.Float)
     restaurant_id = db.Column(db.Integer, db.ForeignKey('restaurant.id'))
+    food_orders = db.relationship('FoodOrder', backref='food', lazy='dynamic')
 
 class Orders(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    orderDate = db.Column(db.DateTime)
-    orderTotal = db.Column(db.Float)
+    order_date = db.Column(db.DateTime)
+    order_total = db.Column(db.Float)
     delivery_address = db.Column(db.String(120))
     completed = db.Column(db.Boolean, default=False)
+    cancelled = db.Column(db.Boolean, default=False)
+    status = db.Column(db.Text)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    food_order = db.relationship('FoodOrder', backref='order', lazy='dynamic')
 
 class FoodOrder(db.Model):
-    food_id = db.Column(db.Integer, db.ForeignKey('food.id'), primary_key=True, name="fk_food_id")
-    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), primary_key=True , name="fk_order_id")
+    id = db.Column(db.Integer, primary_key=True)
+    food_id = db.Column(db.Integer, db.ForeignKey('food.id'), name="fk_food_id", nullable=True)
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id') , name="fk_order_id", nullable=True)
     quantity = db.Column(db.Integer)
     side_note = db.Column(db.Text)
