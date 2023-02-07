@@ -51,6 +51,7 @@ class Restaurant(db.Model):
     street = db.Column(db.String(60))
     country = db.Column(db.String(60))
     rating = db.Column(db.Float)
+    image = db.Column(db.String(120))
     foods = db.relationship('Food', backref='restaurant', lazy='dynamic')
 
 class Food(db.Model):

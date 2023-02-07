@@ -105,7 +105,8 @@ def get_restaurant_list():
         res = {
             "id": r.id,
             "name": r.restaurant_name,
-            "rating": r.rating
+            "rating": r.rating,
+            "image": str(r.image)
         }
         rest_list.append(res)
     return rest_list
@@ -119,6 +120,22 @@ def create_restaurant():
         closing_time = close, street = str(rest['street']),
         country = str(rest['country']), rating = str(rest['rating']))
     db.session.add(r)
+    db.session.commit()
+    return json.dumps(rest)
+
+@app.put("/restaurant")
+def edit_restaurant():
+    rest = request.get_json()
+    r = Restaurant.query.get(str(rest['id']))
+    r.name = str(rest['name'])
+    open = time(int(str(rest['opening_time'])[:2]), int(str(rest['opening_time'])[3:5]),int(str(rest['opening_time'])[6:]))
+    close = time(int(str(rest['closing_time'])[:2]), int(str(rest['closing_time'])[3:5]),int(str(rest['closing_time'])[6:]))
+    r.opening_time = open
+    r.closing_time = close
+    r.street = str(rest['street'])
+    r.country = str(rest['country'])
+    r.rating = str(rest['rating'])
+    r.image = str(rest['image'])
     db.session.commit()
     return json.dumps(rest)
 
