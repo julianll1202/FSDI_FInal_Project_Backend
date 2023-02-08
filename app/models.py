@@ -53,6 +53,7 @@ class Restaurant(db.Model):
     rating = db.Column(db.Float)
     image = db.Column(db.String(120))
     foods = db.relationship('Food', backref='restaurant', lazy='dynamic')
+    category_id = db.Column(db.Integer, db.ForeignKey('category.id'))
 
 class Food(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -80,3 +81,9 @@ class FoodOrder(db.Model):
     order_id = db.Column(db.Integer, db.ForeignKey('orders.id') , name="fk_order_id", nullable=True)
     quantity = db.Column(db.Integer)
     side_note = db.Column(db.Text)
+
+class Category(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(30))
+    description = db.Column(db.Text)
+    restaurants = db.relationship('Restaurant', backref='restaurant', lazy='dynamic')

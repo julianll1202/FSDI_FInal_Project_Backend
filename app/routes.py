@@ -1,6 +1,6 @@
 from app import app, db
 from flask import Flask, abort, request
-from app.models import User, Restaurant, Food, Orders, FoodOrder
+from app.models import User, Restaurant, Food, Orders, FoodOrder, Category
 import json
 from flask import jsonify
 from flask_cors import CORS
@@ -177,6 +177,30 @@ def get_food_details(id):
     }
 
     return json.dumps(food)
+
+######################################
+#       CATEGORY ENDPOINTS           #
+######################################
+@app.get("/category")
+def get_categories():
+    cat = Category.query.all()
+    categories = []
+    for c in cat:
+        category = {
+            "id": c.id,
+            "name": c.name,
+            "description": c.description
+        }
+        categories.append(category)
+    return categories
+
+@app.post("/category")
+def create_category():
+    data = request.get_json()
+    cat = Category(name=str(data['name']), description=str(data['description']))
+    db.session.add(cat)
+    db.session.commit()
+    return data
 
 ######################################
 #          ORDER ENDPOINTS           #
