@@ -16,6 +16,7 @@ class User(UserMixin,db.Model):
     phone = db.Column(db.String(10))
     token = db.Column(db.String(32), index=True, unique=True)
     token_expiration =db.Column(db.DateTime)
+    favorites = db.relationship('Favorites', backref='user', lazy='dynamic')
 
     # Converts the password string into a hash
     def set_password(self, password):
@@ -43,6 +44,11 @@ class User(UserMixin,db.Model):
             return None
         return user
 
+class Favorites(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), name="fk_user_id", nullable=True)
+    restaurant_id = db.Column(db.Integer, db.ForeignKey('restaurant.id') , name="fk_restaurant_id", nullable=True)
+
 class Restaurant(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     restaurant_name = db.Column(db.String(120), index=True)
@@ -54,6 +60,7 @@ class Restaurant(db.Model):
     image = db.Column(db.String(120))
     foods = db.relationship('Food', backref='restaurant', lazy='dynamic')
     category_id = db.Column(db.Integer, db.ForeignKey('category.id'))
+    favorites = db.relationship('Favorites', backref='restaurant', lazy='dynamic')
 
 class Food(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -86,4 +93,5 @@ class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(30))
     description = db.Column(db.Text)
+    image = db.Column(db.String(120))
     restaurants = db.relationship('Restaurant', backref='restaurant', lazy='dynamic')

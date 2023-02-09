@@ -159,6 +159,7 @@ def get_restaurant_menu(id):
             "name": food.food_name,
             "image": food.image,
             "price": food.price,
+            "desc": food.description,
             "restaurant_id": food.restaurant_id
         }
         menu_list.append(f)
@@ -178,6 +179,18 @@ def get_food_details(id):
 
     return json.dumps(food)
 
+@app.put("/food")
+def edit_food():
+    data = request.get_json()
+    food = Food.query.get(int(data['id']))
+    food.name = str(data['name'])
+    food.description = str(data['desc'])
+    food.price = float(data['price'])
+    food.image = str(data['image'])
+    food.restaurant_id = int(data['rest_id'])
+    db.session.commit()
+    return json.dumps(data)
+
 ######################################
 #       CATEGORY ENDPOINTS           #
 ######################################
@@ -189,7 +202,8 @@ def get_categories():
         category = {
             "id": c.id,
             "name": c.name,
-            "description": c.description
+            "description": c.description,
+            "image": c.image
         }
         categories.append(category)
     return categories
@@ -197,10 +211,20 @@ def get_categories():
 @app.post("/category")
 def create_category():
     data = request.get_json()
-    cat = Category(name=str(data['name']), description=str(data['description']))
+    cat = Category(name=str(data['name']), description=str(data['description']), image=str(data['image']))
     db.session.add(cat)
     db.session.commit()
     return data
+
+@app.put("/category")
+def edit_category():
+    data = request.get_json()
+    cat = Category.query.get(int(data['id']))
+    cat.name = str(data['name'])
+    cat.description=str(data['description'])
+    cat.image=str(data['image'])
+    db.session.commit()
+    return json.dumps(data)
 
 ######################################
 #          ORDER ENDPOINTS           #
