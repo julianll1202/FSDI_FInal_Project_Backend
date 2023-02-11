@@ -2,6 +2,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from app import db
 from datetime import datetime, timedelta
 from flask_login import UserMixin
+from app import login
 import os
 import base64
 
@@ -95,3 +96,7 @@ class Category(db.Model):
     description = db.Column(db.Text)
     image = db.Column(db.String(120))
     restaurants = db.relationship('Restaurant', backref='restaurant', lazy='dynamic')
+
+@login.user_loader
+def load_user(id):
+    return User.query.get(id)

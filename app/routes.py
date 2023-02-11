@@ -1,15 +1,17 @@
 from app import app, db
 from flask import Flask, abort, request
-from app.models import User, Restaurant, Food, Orders, FoodOrder, Category
+from app.models import User, Restaurant, Food, Orders, FoodOrder, Category, Favorites
 import json
 from flask import jsonify
 from flask_cors import CORS
-from app.api.auth import basic_auth
+from app.api.auth import basic_auth, token_auth
+from app.api import bp
 from werkzeug.security import generate_password_hash, check_password_hash
 CORS(app)
 from sqlalchemy import select, desc
 from sqlalchemy.orm import sessionmaker
-from datetime import time, datetime, date
+from datetime import time, datetime
+from flask_login import current_user, login_user, login_required
 
 @app.route('/')
 @app.route('/index')
@@ -45,12 +47,15 @@ def save_user():
 def get_token():
     token = basic_auth.current_user().get_token()
     db.session.commit()
+
     return jsonify({'token': token})
 
-@app.get("/user-profile/<string:t>")
-def get_user(t):
-    u = db.session.query(User).filter_by(token=t).first()
-    
+
+@app.get("/user-profile")
+@token_auth.login_required
+def get_user():
+    # u = db.session.query(User).filter_by(token=t).first()
+    u = basic_auth.current_user()
     out = {
         "id": u.id,
         "name": u.first_name,
@@ -64,6 +69,7 @@ def get_user(t):
     return json.dumps(out)
 
 @app.post("/user-profile")
+@token_auth.login_required
 def edit_user():
     user = request.get_json()
     u = User.query.get(str(user['id']))
@@ -172,7 +178,7 @@ def get_food_details(id):
             "id": f.id,
             "name": f.food_name,
             "description": f.description,
-            "image": f.image,
+            "image": f.image,-
             "price": f.price,
             "restaurant_id": f.restaurant_id
     }
@@ -190,6 +196,46 @@ def edit_food():
     food.restaurant_id = int(data['rest_id'])
     db.session.commit()
     return json.dumps(data)
+
+######################################
+#       FAVORITES ENDPOINTS          #
+######################################
+@app.get("/user/<int:id>/favorite")
+def get_favorites(id):
+    favorites = []
+    favs = db.session.query(Favorites).filter_by(user_id=id).all()
+    for fav in favs:
+        res_info = Restaurant.query.get(int(fav.restaurant_id))
+        f = {
+            "fav_id":fav.id,
+            "name": res_info.restaurant_name,
+            "rest_id": res_info.id,
+            "name": res_info.restaurant_name,
+            "rating": res_info.rating,
+            "image": str(res_info.image)
+        }
+        favorites.append(f)
+    return favorites
+
+@app.post("/favorite")
+def add_favorite():
+    new_fav = request.get_json()
+    favs = get_favorites(int(new_fav['user_id']))
+    for f in favs:
+        if int(new_fav['rest_id']) == f['rest_id']:
+            return json.dumps(new_fav)
+    fav = Favorites(user_id=int(new_fav['user_id']), restaurant_id=int(new_fav['rest_id']))
+    db.session.add(fav)
+    db.session.commit()
+    return json.dumps(new_fav)
+
+@app.delete("/favorite")
+def remove_favorite():
+    new_fav = request.get_json()
+    fav = Favorites.query.get(int(new_fav['fav_id']))
+    db.session.delete(fav)
+    db.session.commit()
+    return json.dumps(new_fav)
 
 ######################################
 #       CATEGORY ENDPOINTS           #
