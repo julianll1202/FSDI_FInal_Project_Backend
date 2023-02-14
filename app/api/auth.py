@@ -16,5 +16,6 @@ def verify_password(user, passw):
 def verify_token(t):
     tok = request.get_json()
     token = str(tok['token'])
+    print(t)
     return User.check_token(token) if token else None
 

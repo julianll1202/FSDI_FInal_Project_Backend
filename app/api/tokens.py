@@ -4,7 +4,7 @@ from app.api import bp
 from app import app
 from app.api.auth import basic_auth
 
-@app.route('/tokens', methods=['POST'])
+@app.post('/tokens')
 @basic_auth.login_required
 def get_token():
     token = basic_auth.current_user().get_token()

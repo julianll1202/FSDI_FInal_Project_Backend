@@ -47,13 +47,23 @@ def save_user():
 def get_token():
     token = basic_auth.current_user().get_token()
     db.session.commit()
+    u = basic_auth.current_user()
+    out = {
+        "id": u.id,
+        "name": u.first_name,
+        "last_name": u.last_name,
+        "email": u.email,
+        "phone": u.phone,
+        "password": u.password,
+        "country": u.country,
+        "token": u.token
+    }
+    return json.dumps(out)
 
-    return jsonify({'token': token})
 
-
-@app.get("/user-profile")
+@app.post("/user-profile/<string:t>")
 @token_auth.login_required
-def get_user():
+def get_user(t):
     # u = db.session.query(User).filter_by(token=t).first()
     u = basic_auth.current_user()
     out = {
