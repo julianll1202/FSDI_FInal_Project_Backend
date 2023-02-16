@@ -127,6 +127,21 @@ def get_restaurant_list():
         rest_list.append(res)
     return rest_list
 
+@app.get("/restaurant/<int:id>")
+def get_restaurant(id):
+    r = Restaurant.query.get(id)
+    out = {
+        "id": r.id,
+        "name": r.restaurant_name,
+        "rating": r.rating,
+        "image": str(r.image),
+        "opening_time": r.opening_time.strftime("%H:%M"),
+        "closing_time": r.closing_time.strftime("%H:%M"),
+        "street": r.street,
+        "country": r.country
+    }
+    return json.dumps(out)
+
 @app.post("/restaurant")
 def create_restaurant():
     rest = request.get_json()
@@ -188,7 +203,7 @@ def get_food_details(id):
             "id": f.id,
             "name": f.food_name,
             "description": f.description,
-            "image": f.image,-
+            "image": f.image,
             "price": f.price,
             "restaurant_id": f.restaurant_id
     }
