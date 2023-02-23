@@ -142,6 +142,13 @@ def get_restaurant(id):
     }
     return json.dumps(out)
 
+def get_restaurant_name(id):
+    r = Restaurant.query.get(id)
+    out = {
+        "rest_name": r.restaurant_name
+    }
+    return r.restaurant_name
+
 @app.post("/restaurant")
 def create_restaurant():
     rest = request.get_json()
@@ -199,13 +206,15 @@ def get_restaurant_menu(id):
 @app.get("/food/details/<int:id>")
 def get_food_details(id):
     f = Food.query.get(id)
+    rest_name = get_restaurant_name(f.restaurant_id)
     food = {
             "id": f.id,
             "name": f.food_name,
             "description": f.description,
             "image": f.image,
             "price": f.price,
-            "restaurant_id": f.restaurant_id
+            "restaurant_id": f.restaurant_id,
+            "restaurant_name": rest_name
     }
 
     return json.dumps(food)
