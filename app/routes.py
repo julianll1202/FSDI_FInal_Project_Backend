@@ -11,7 +11,7 @@ CORS(app)
 from sqlalchemy import select, desc
 from sqlalchemy.orm import sessionmaker
 from datetime import time, datetime
-from flask_login import current_user, login_user, login_required
+from flask_login import current_user, login_user, login_required, logout_user
 
 @app.route('/')
 @app.route('/index')
@@ -60,6 +60,10 @@ def get_token():
     }
     return json.dumps(out)
 
+@app.get("/user/logout")
+def logout_user():
+    logout_user()
+    return ("User is logged out")
 
 @app.post("/user-profile/<string:t>")
 @token_auth.login_required
@@ -208,13 +212,13 @@ def get_food_details(id):
     f = Food.query.get(id)
     rest_name = get_restaurant_name(f.restaurant_id)
     food = {
-            "id": f.id,
-            "name": f.food_name,
-            "description": f.description,
-            "image": f.image,
-            "price": f.price,
-            "restaurant_id": f.restaurant_id,
-            "restaurant_name": rest_name
+        "id": f.id,
+        "name": f.food_name,
+        "description": f.description,
+        "image": f.image,
+        "price": f.price,
+        "restaurant_id": f.restaurant_id,
+        "restaurant_name": rest_name
     }
 
     return json.dumps(food)
@@ -309,6 +313,20 @@ def edit_category():
 ######################################
 #          ORDER ENDPOINTS           #
 ######################################
+@app.get("/orders")
+def get_orders_list():
+    o = Orders.query.all()
+    orders = []
+    for order in o:
+        ordr = {
+            "id": order.id,
+            "order_date": order.order_date,
+            "order_total": order.order_total,
+            "delivery_address": order.delivery_address,
+            "user_id": order.user_id
+        }
+        orders.append(ordr)
+    return orders
 
 @app.get("/user/order/<int:id>")
 def get_order(id):
@@ -333,25 +351,26 @@ def get_order(id):
         "order_date": str(o.order_date),
         "status": o.status,
         "products": food_list,
-        "restaurant_name": res.restaurant_name
+        "restaurant_name": res.restaurant_name,
+        "rest_img": res.image
     }
-    return json.dumps(order)
+    return order
 
 @app.post("/order")
 def create_order():
     data = request.get_json()
     today = datetime.now()
-    new_order = Orders(order_date=today, order_total=float(data['total']),
+    new_order = Orders(order_date=today, order_total=float(data['order_total']),
         delivery_address=str(data['delivery_address']), 
         status="Restaurant is receiving your order", user_id=int(data['user_id'])
     )
     db.session.add(new_order)
-    current_order = db.session.query(Orders).filter_by(user_id=int(data['user_id'])).first()
+    current_order = db.session.query(Orders).filter_by(user_id=int(data['user_id'])).order_by(desc(Orders.id)).first()
     #cur_order_query = select(Orders.id).where(Orders.user_id==int(data['user_id'])).order_by(desc(Orders.id)).limit(1)
     # current_order = db.session.execute(cur_order_query)
-    for food in data['food_list']:
-        new_food_order = FoodOrder(food_id=food['id'],order_id=current_order.id, 
-            quantity=food['quantity'], side_note=food['side_note'])
+    for food in data['items']:
+        new_food_order = FoodOrder(food_id=food['food_id'],order_id=current_order.id, 
+            quantity=food['quantity'], side_note=food['side_notes'])
         db.session.add(new_food_order)
     db.session.commit()
     return json.dumps(data)
@@ -364,6 +383,14 @@ def get_past_orders(id):
         o = get_order(order.id)
         past_orders.append(o)
     return past_orders
+
+# def get_user_food_orders(order_id):
+#     food_orders = db.session.query(FoodOrder).filter(FoodOrder.order_id==order_id).all()
+#     foods = []
+#     for food in food_orders:
+#         f = get_food_details(f.food_id)
+#         food.append(f)
+#     return foods
 
 @app.get("/food-orders")
 def get_food_order_list():
@@ -390,3 +417,10 @@ def get_food_order(id):
         "side_note": food_order.side_note
     }
     return json.dumps(out)
+
+@app.delete("/order/<int:id>")
+def delete_order(id):
+    order = Orders.query.get(id)
+    db.session.delete(order)
+    db.session.commit()
+    return json.dumps("Order deleted")

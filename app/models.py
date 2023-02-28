@@ -81,7 +81,7 @@ class Orders(db.Model):
     cancelled = db.Column(db.Boolean, default=False)
     status = db.Column(db.Text)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    food_order = db.relationship('FoodOrder', backref='order', lazy='dynamic')
+    food_order = db.relationship('FoodOrder', backref='order', cascade="all,delete", lazy='dynamic')
 
 class FoodOrder(db.Model):
     id = db.Column(db.Integer, primary_key=True)
