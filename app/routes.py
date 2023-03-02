@@ -61,7 +61,7 @@ def get_token():
     return json.dumps(out)
 
 @app.get("/user/logout")
-def logout_user():
+def logout():
     logout_user()
     return ("User is logged out")
 
