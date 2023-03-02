@@ -235,6 +235,13 @@ def edit_food():
     db.session.commit()
     return json.dumps(data)
 
+@app.delete("/food/<int:id>")
+def delete_food(id):
+    food = Food.query.get(id)
+    db.session.delete(food)
+    db.session.commit()
+    return "Food was deleted"
+
 ######################################
 #       FAVORITES ENDPOINTS          #
 ######################################
