@@ -262,25 +262,27 @@ def get_favorites(id):
         favorites.append(f)
     return favorites
 
-@app.post("/favorite")
-def add_favorite():
-    new_fav = request.get_json()
-    favs = get_favorites(int(new_fav['user_id']))
+@app.post("/user/<int:id>/favorite/<int:rest_id>")
+def add_favorite(id, rest_id):
+    # new_fav = request.get_json()
+    favs = get_favorites(id)
     for f in favs:
-        if int(new_fav['rest_id']) == f['rest_id']:
-            return json.dumps(new_fav)
-    fav = Favorites(user_id=int(new_fav['user_id']), restaurant_id=int(new_fav['rest_id']))
+        if rest_id == f['rest_id']:
+            return "Already a fav"
+    fav = Favorites(user_id=id, restaurant_id=rest_id)
     db.session.add(fav)
     db.session.commit()
-    return json.dumps(new_fav)
+    return "Fav rest added"
 
-@app.delete("/favorite")
-def remove_favorite():
-    new_fav = request.get_json()
-    fav = Favorites.query.get(int(new_fav['fav_id']))
-    db.session.delete(fav)
+@app.delete("/user/<int:id>/favorite/<int:rest_id>")
+def remove_favorite(id,rest_id):
+    # new_fav = request.get_json()
+    favs = db.session.query(Favorites).filter_by(user_id=id).all()
+    for fav in favs:
+        if rest_id == fav.restaurant_id :
+            db.session.delete(fav)
     db.session.commit()
-    return json.dumps(new_fav)
+    return "Removed fav"
 
 ######################################
 #       CATEGORY ENDPOINTS           #
