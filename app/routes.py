@@ -160,7 +160,7 @@ def create_restaurant():
     close = time(int(str(rest['closing_time'])[:2]), int(str(rest['closing_time'])[3:5]),int(str(rest['closing_time'])[6:]))
     r = Restaurant(restaurant_name=str(rest['name']), opening_time = open,
         closing_time = close, street = str(rest['street']),
-        country = str(rest['country']), rating = str(rest['rating']))
+        country = str(rest['country']), rating = str(rest['rating']), image = str(rest['image']))
     db.session.add(r)
     db.session.commit()
     return json.dumps(rest)
