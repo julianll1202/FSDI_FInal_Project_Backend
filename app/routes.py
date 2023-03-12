@@ -1,5 +1,5 @@
 from app import app, db
-from flask import Flask, abort, request
+from flask import Flask, abort, request, render_template
 from app.models import User, Restaurant, Food, Orders, FoodOrder, Category, Favorites
 import json
 from flask import jsonify
@@ -16,7 +16,7 @@ from flask_login import current_user, login_user, login_required, logout_user
 @app.route('/')
 @app.route('/index')
 def index():
-    return "Hello, World!"
+    return render_template("index.html")
 @app.route('/julian')
 def my_name():
     return "Hi, my name is Julian"
@@ -68,7 +68,6 @@ def logout():
 @app.post("/user-profile")
 @token_auth.login_required
 def get_user():
-    # u = db.session.query(User).filter_by(token=t).first()
     u = basic_auth.current_user()
     out = {
         "id": u.id,
@@ -276,7 +275,6 @@ def add_favorite(id, rest_id):
 
 @app.delete("/user/<int:id>/favorite/<int:rest_id>")
 def remove_favorite(id,rest_id):
-    # new_fav = request.get_json()
     favs = db.session.query(Favorites).filter_by(user_id=id).all()
     for fav in favs:
         if rest_id == fav.restaurant_id :
@@ -340,7 +338,6 @@ def get_orders_list():
 @app.get("/user/order/<int:id>")
 def get_order(id):
     o = Orders.query.get(id)
-    # foods = db.session.query(FoodOrder).filter_by(order_id=id).all()
     foods = db.session.query(Food).join(FoodOrder).filter(FoodOrder.order_id==id).all()
     food_list = []
     for food in foods:
@@ -375,8 +372,7 @@ def create_order():
     )
     db.session.add(new_order)
     current_order = db.session.query(Orders).filter_by(user_id=int(data['user_id'])).order_by(desc(Orders.id)).first()
-    #cur_order_query = select(Orders.id).where(Orders.user_id==int(data['user_id'])).order_by(desc(Orders.id)).limit(1)
-    # current_order = db.session.execute(cur_order_query)
+
     for food in data['items']:
         new_food_order = FoodOrder(food_id=food['food_id'],order_id=current_order.id, 
             quantity=food['quantity'], side_note=food['side_notes'])
@@ -393,13 +389,6 @@ def get_past_orders(id):
         past_orders.append(o)
     return past_orders
 
-# def get_user_food_orders(order_id):
-#     food_orders = db.session.query(FoodOrder).filter(FoodOrder.order_id==order_id).all()
-#     foods = []
-#     for food in food_orders:
-#         f = get_food_details(f.food_id)
-#         food.append(f)
-#     return foods
 
 @app.get("/food-orders")
 def get_food_order_list():
