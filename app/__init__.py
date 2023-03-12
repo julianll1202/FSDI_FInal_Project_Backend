@@ -11,7 +11,8 @@ naming_convention = {
 }
 
 metadata = MetaData(naming_convention=naming_convention)
-app = Flask(__name__)
+if __name__ == "__main__":
+    app = Flask(__name__)
 app.config.from_object(Config)
 db = SQLAlchemy(app, metadata=metadata)
 migrate = Migrate(app,db, render_as_batch=True)
