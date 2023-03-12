@@ -65,9 +65,9 @@ def logout():
     logout_user()
     return ("User is logged out")
 
-@app.post("/user-profile/<string:t>")
+@app.post("/user-profile")
 @token_auth.login_required
-def get_user(t):
+def get_user():
     # u = db.session.query(User).filter_by(token=t).first()
     u = basic_auth.current_user()
     out = {
@@ -82,7 +82,7 @@ def get_user(t):
     }
     return json.dumps(out)
 
-@app.post("/user-profile")
+@app.put("/user-profile/edit")
 @token_auth.login_required
 def edit_user():
     user = request.get_json()
@@ -91,7 +91,7 @@ def edit_user():
     u.first_name = str(user['name'])
     u.last_name = str(user['last_name'])
     u.email = str(user['email'])
-    u.password = str(user['password'])
+    u.password = generate_password_hash(str(user['password']))
     u.phone = str(user['phone'])
     u.country = str(user['country'])
     db.session.commit()
